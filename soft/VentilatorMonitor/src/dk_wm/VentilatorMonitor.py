@@ -22,6 +22,7 @@ import pyqtgraph as pg
 import numpy as np
 import RPi.GPIO as GPIO
 import pygatt
+import logging
 
 class AckDialog(QMessageBox):
     def __init__(self, text, textExtra=''):
@@ -56,7 +57,7 @@ class MainWindow(QMainWindow):
     def __init__(self, adapters):
         super(MainWindow, self).__init__()
         
-        self.adapter = adapters
+        self.adapters = adapters
         self.initUI()
         
     
@@ -408,6 +409,9 @@ if __name__ == '__main__' or __name__ == 'dk_wm.VentilatorMonitor' :
     GPIO.setwarnings(False)
     GPIO.setup(16,GPIO.OUT)
     
+    logging.basicConfig()
+    logging.getLogger('pygatt').setLevel(logging.WARN)
+        
     adapters = []
     for i in range(0, 3):
         adapters.append(pygatt.GATTToolBackend())
@@ -441,6 +445,6 @@ if __name__ == '__main__' or __name__ == 'dk_wm.VentilatorMonitor' :
     translator.load('qt_%s' % locale, path)
     app.installTranslator(translator)
     
-    mw = MainWindow()
+    mw = MainWindow(adapters)
     
     sys.exit(app.exec_())
