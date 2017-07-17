@@ -20,21 +20,52 @@ import random
 import csv
 import pyqtgraph as pg
 import numpy as np
+import RPi.GPIO as GPIO
+import pygatt
 
+class AckDialog(QMessageBox):
+    def __init__(self, text, textExtra=''):
+        super(AckDialog, self).__init__()
+        self.setIcon(QMessageBox.Question)
+        self.setWindowTitle('Potwierdzenie')
+        self.setText(text)
+        self.setInformativeText(textExtra)
+        self.setStandardButtons(QMessageBox.Yes|QMessageBox.No)
+        self.buttonY = self.button(QMessageBox.Yes)
+        self.buttonY.setText('Tak')
+        self.buttonY.setFixedSize(80, 80)
+        self.buttonN = self.button(QMessageBox.No)
+        self.buttonN.setText('Nie')
+        self.buttonN.setFixedSize(80, 80)
+        self.exec_()
+        
+    def buttonSelected(self):
+        return self.clickedButton()
+    
+    def YesOrNo(self):
+        if self.clickedButton() == self.buttonY:
+            return True
+        elif self.clickedButton() == self.buttonN:
+            return False
+        else:
+            return False
+        
+    
 class MainWindow(QMainWindow):
     
-    def __init__(self):
+    def __init__(self, adapters):
         super(MainWindow, self).__init__()
         
+        self.adapter = adapters
         self.initUI()
         
     
         #function check if dir exists
     def checkPathAndCreate(self, path):
-        print "Checking path", path
+        #print "Checking path", path
 
         if not os.path.exists(path):
-            print "Creating", path
+            #print "Creating", path
             os.makedirs(path)
             
     def initUI(self):
@@ -173,6 +204,7 @@ class MainWindow(QMainWindow):
         stopAction.setShortcut('Ctrl+O')
         stopAction.setStatusTip('Zakończenie logowania danych')
         stopAction.triggered.connect(self.stop)
+        #stopAction.setEnabled(False)
         
         exitAction = QAction(QIcon('/opt/dk/wm/images/exit.png'), 'Wyjście', self)
         exitAction.setShortcut('Ctrl+Q')
@@ -235,6 +267,9 @@ class MainWindow(QMainWindow):
         self.timer.start(250, self)
         #print "Main timer", self.timer.timerId()
         
+        self.timerGATTConnect = QBasicTimer()
+        self.timerGATTConnect.start(5000, self)
+        
         self.timerLogging = QBasicTimer()        
         
         self.setGeometry(300, 300, 300, 300)        
@@ -247,6 +282,7 @@ class MainWindow(QMainWindow):
         
             
     def start(self):
+        GPIO.output(16,GPIO.HIGH)
         self.logCount = 0
         pen = os.listdir('/media/pi/')
         #print pen, type(pen), len(pen)
@@ -255,11 +291,11 @@ class MainWindow(QMainWindow):
         else:
             self.path = '/media/pi/' + pen[0] + '/Dane_z_systemu/'
         
-        print "Path", path
+        #print "Path", path
         
         self.checkPathAndCreate(self.path)
         self.fileName = self.path + datetime.datetime.now().strftime("%d-%m-%Y_%H-%M-%S.csv")
-        print "Filename", self.fileName
+        #print "Filename", self.fileName
         self.csvFile = open(self.fileName, 'w')
         self.fieldnames = ['Data', 'Godzina', \
                             'Temperatura otoczenia', 'Wilgotność powietrza', 'Ciśnienie atmosferyczne', \
@@ -272,9 +308,12 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage('Rozpoczęto logowanie do pliku: '+str(self.fileName))
     
     def stop(self):
+        GPIO.output(16,GPIO.HIGH)
         self.timerLogging.stop()
         self.csvFile.close()
         self.statusBar().showMessage('Zakończono logowanie do pliku: '+str(self.fileName))
+        time.sleep(0.1)
+        GPIO.output(16,GPIO.LOW)
     
     def about(self):
         pass
@@ -322,6 +361,7 @@ class MainWindow(QMainWindow):
             self.curve3.setData(self.data3)
             
         elif e.timerId()==self.timerLogging.timerId(): # data logging
+            GPIO.output(16,GPIO.LOW)
             date = datetime.datetime.now().strftime("%Y-%m-%d")
             time = datetime.datetime.now().strftime("%H:%M:%S")
             
@@ -336,36 +376,45 @@ class MainWindow(QMainWindow):
                                   })
             self.logCount += 1
             self.statusBar().showMessage('Wpisano rekordów do pliku z danymi: '+str(self.logCount))
+        elif e.timerId()==self.timerGATTConnect.timerId():
+            devs = self.adapters[0].scan(timeout=3, run_as_root=True)
     
     def restart(self):
-        os.system("shutdown now -r")
+        ack = AckDialog("Czy napewno chcesz uruchomić ponownie urzązdenie?", "Spowoduje to zakończenie aktualnej sesji logowania")
+        
+        if ack.YesOrNo():
+            os.system("shutdown now -r")
         
     def shutdown(self):
-        os.system("shutdown now -h")
-        #os.system('systemctl poweroff') 
+        ack = AckDialog("Czy napewno chcesz wyłączyć urzązdenie?")
+        
+        if ack.YesOrNo():
+            os.system("shutdown now -h")
+            #os.system('systemctl poweroff') 
     
     def closeEvent(self, event):
         #event.accept()
         #return
-        ack = QMessageBox()
-        ack.setIcon(QMessageBox.Question)
-        ack.setWindowTitle('Potwierdzenie')
-        ack.setText("Czy napewno chcesz opuścić aplikacje?")
-        ack.setStandardButtons(QMessageBox.Yes|QMessageBox.No)
-        buttonY = ack.button(QMessageBox.Yes)
-        buttonY.setText('Tak')
-        buttonN = ack.button(QMessageBox.No)
-        buttonN.setText('Nie')
-        ack.exec_()
+        ack = AckDialog("Czy napewno chcesz opuścić aplikacje?")        
 
-        if ack.clickedButton() == buttonY:
+        if ack.YesOrNo():
             event.accept()
-        elif ack.clickedButton() == buttonN:
+        else:
             event.ignore()        
         
         
 if __name__ == '__main__' or __name__ == 'dk_wm.VentilatorMonitor' :
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
+    GPIO.setup(16,GPIO.OUT)
     
+    adapters = []
+    for i in range(0, 3):
+        adapters.append(pygatt.GATTToolBackend())
+        
+    for adapter in adapters:
+        adapter.start()
+
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
     
