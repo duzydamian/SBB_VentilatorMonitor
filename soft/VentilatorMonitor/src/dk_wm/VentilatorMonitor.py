@@ -28,7 +28,15 @@ class MainWindow(QMainWindow):
         
         self.initUI()
         
-        
+    
+        #function check if dir exists
+    def checkPathAndCreate(self, path):
+        print "Checking path", path
+
+        if not os.path.exists(path):
+            print "Creating", path
+            os.makedirs(path)
+            
     def initUI(self):
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setWindowState(Qt.WindowMaximized)
@@ -240,9 +248,19 @@ class MainWindow(QMainWindow):
             
     def start(self):
         self.logCount = 0
-        self.path = '/home/pi/Desktop/Dane_z_systemu/'
-        self.fileName = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M:%S.csv")
-        self.csvFile = open(self.path+self.fileName, 'w')
+        pen = os.listdir('/media/pi/')
+        #print pen, type(pen), len(pen)
+        if len(pen) == 0:
+            self.path = '/home/pi/Desktop/Dane_z_systemu/'
+        else:
+            self.path = '/media/pi/' + pen[0] + '/Dane_z_systemu/'
+        
+        print "Path", path
+        
+        self.checkPathAndCreate(self.path)
+        self.fileName = self.path + datetime.datetime.now().strftime("%d-%m-%Y_%H-%M-%S.csv")
+        print "Filename", self.fileName
+        self.csvFile = open(self.fileName, 'w')
         self.fieldnames = ['Data', 'Godzina', \
                             'Temperatura otoczenia', 'Wilgotność powietrza', 'Ciśnienie atmosferyczne', \
                            'Temperatura w kanale', 'Prędkość powietrza w kanale', 'Różnica ciśnienień w kanale']
