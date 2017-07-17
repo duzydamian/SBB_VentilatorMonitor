@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Monitoring wentylatora
+Comment=System monitorowania konitora
+Icon=/usr/share/icons/dk-wm/app.png
+Exec=/opt/dk/wm/VentilatorMonitor
+Type=Application
+Encoding=UTF-8
+Terminal=false
+Categories=None;
