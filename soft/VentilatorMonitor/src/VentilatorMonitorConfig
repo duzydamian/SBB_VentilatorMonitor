@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+# Script opens cofnig file with nano editor
+#
+# Author : Damian Karbowiak
+# Company: 
+#
+# Date   : 13/07/2017
+#
+
+leafpad /opt/dk/wm/config.cfg
