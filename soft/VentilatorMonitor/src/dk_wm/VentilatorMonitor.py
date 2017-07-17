@@ -48,9 +48,9 @@ class MainWindow(QMainWindow):
         self.headerText.setAlignment(Qt.AlignCenter)
         #self.headerText.setStyleSheet("QLabel {background-color: red;}")
         self.headerIcon1 = QLabel("System monitorowania wentylatora")
-        self.headerIcon1.setPixmap(QPixmap("images/icon1_small.png"))
+        self.headerIcon1.setPixmap(QPixmap("/opt/dk/wm/images/icon1_small.png"))
         self.headerIcon2 = QLabel("System monitorowania wentylatora")
-        self.headerIcon2.setPixmap(QPixmap("images/icon1_small.png"))
+        self.headerIcon2.setPixmap(QPixmap("/opt/dk/wm/images/icon1_small.png"))
         self.header = QWidget()
         headerLayout = QGridLayout()
         headerLayout.addWidget(self.headerIcon1, 0, 0)
@@ -156,36 +156,36 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(main)
         
-        startAction = QAction(QIcon('images/start.png'), 'Start', self)
+        startAction = QAction(QIcon('/opt/dk/wm/images/start.png'), 'Start', self)
         startAction.setShortcut('Ctrl+A')
         startAction.setStatusTip('Rozpoczęcie logowania danych')
         startAction.triggered.connect(self.start)
         
-        stopAction = QAction(QIcon('images/stop.png'), 'Stop', self)
+        stopAction = QAction(QIcon('/opt/dk/wm/images/stop.png'), 'Stop', self)
         stopAction.setShortcut('Ctrl+O')
         stopAction.setStatusTip('Zakończenie logowania danych')
         stopAction.triggered.connect(self.stop)
         
-        exitAction = QAction(QIcon('images/exit.png'), 'Wyjście', self)
+        exitAction = QAction(QIcon('/opt/dk/wm/images/exit.png'), 'Wyjście', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Wyjście z aplikacji')
         exitAction.triggered.connect(self.close)
         
-        restartAction = QAction(QIcon('images/restart.png'), 'Restart', self)
+        restartAction = QAction(QIcon('/opt/dk/wm/images/restart.png'), 'Restart', self)
         restartAction.setShortcut('Ctrl+R')
         restartAction.setStatusTip('Restart systemu operacyjnego')
         restartAction.triggered.connect(self.restart)
         
-        shutdownAction = QAction(QIcon('images/shutdown.png'), 'Wyłączenie', self)
+        shutdownAction = QAction(QIcon('/opt/dk/wm/images/shutdown.png'), 'Wyłączenie', self)
         shutdownAction.setShortcut('Ctrl+S')
         shutdownAction.setStatusTip('Wyłączenie systemu operacyjnego')
         shutdownAction.triggered.connect(self.shutdown)
         
-        aboutAction = QAction(QIcon('images/about.png'), 'O programie', self)
+        aboutAction = QAction(QIcon('/opt/dk/wm/images/about.png'), 'O programie', self)
         aboutAction.setStatusTip('Informacje o programie')
         aboutAction.triggered.connect(self.about)
  
-        #helpAction = QAction(QIcon('images/help.png'), 'Pomoc', self)
+        #helpAction = QAction(QIcon('/opt/dk/wm/images/help.png'), 'Pomoc', self)
         #helpAction.setStatusTip('Pomoc do pgoramu')
         #helpAction.triggered.connect(self.help)
         
@@ -231,7 +231,7 @@ class MainWindow(QMainWindow):
         
         self.setGeometry(300, 300, 300, 300)        
         self.setWindowTitle('System monitorowania wentylatora')
-        self.setWindowIcon(QIcon('images/icon1.png'))    
+        self.setWindowIcon(QIcon('/opt/dk/wm/images/icon1.png'))    
         
         self.statusBar().showMessage('Uruchomienie aplikacji')
     

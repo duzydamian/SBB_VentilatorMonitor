@@ -99,3 +99,7 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# moje
+dk-wm
+dk-wm.zip
