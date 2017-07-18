@@ -97,9 +97,12 @@ class MainWindow(QMainWindow):
         fontUB = QFont('Roboto', 14)
         fontUB.setBold(True)
         fontUB.setUnderline(True)
+        fontUB18 = QFont('Roboto', 18)
+        fontUB18.setBold(True)
+        fontUB18.setUnderline(True)
         
         self.headerText = QLabel("System monitorowania wentylatora wersja "+self.version)
-        self.headerText.setFont(fontUB)
+        self.headerText.setFont(fontUB18)
         self.headerText.setAlignment(Qt.AlignCenter)
         #self.headerText.setStyleSheet("QLabel {background-color: red;}")
         self.headerIcon1 = QLabel("System monitorowania wentylatora")
