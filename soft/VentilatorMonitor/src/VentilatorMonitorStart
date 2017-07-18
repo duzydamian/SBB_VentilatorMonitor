@@ -12,3 +12,6 @@
 # Import library
 #-------------------------------------------------------------------------------------------------------------#
 from dk_wm import VentilatorMonitor
+
+ventilator = VentilatorMonitor.VentilatorMonitor()
+ventilator.main()
