@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
+#!/usr/bin/python
 
 """
 Program do podgldu stanu wentylatora
@@ -23,6 +22,7 @@ import numpy as np
 import RPi.GPIO as GPIO
 import pygatt
 import logging
+from TestoDevice import TestoDevice
 
 class AckDialog(QMessageBox):
     def __init__(self, text, textExtra=''):
@@ -269,7 +269,7 @@ class MainWindow(QMainWindow):
         #print "Main timer", self.timer.timerId()
         
         self.timerGATTConnect = QBasicTimer()
-        self.timerGATTConnect.start(5000, self)
+        self.timerGATTConnect.start(10000, self)
         
         self.timerLogging = QBasicTimer()        
         
@@ -378,7 +378,11 @@ class MainWindow(QMainWindow):
             self.logCount += 1
             self.statusBar().showMessage('Wpisano rekordów do pliku z danymi: '+str(self.logCount))
         elif e.timerId()==self.timerGATTConnect.timerId():
-            devs = self.adapters[0].scan(timeout=3, run_as_root=True)
+            #print adapters
+            devs = self.adapters[0].scan(timeout=5, run_as_root=False)
+            for dev in devs:                    
+                print "\tUrzadzenie ", dev["name"], " o adresie: ", dev["address"]
+                newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[1])
     
     def restart(self):
         ack = AckDialog("Czy napewno chcesz uruchomić ponownie urzązdenie?", "Spowoduje to zakończenie aktualnej sesji logowania")
@@ -405,46 +409,62 @@ class MainWindow(QMainWindow):
         
         
 if __name__ == '__main__' or __name__ == 'dk_wm.VentilatorMonitor' :
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setwarnings(False)
-    GPIO.setup(16,GPIO.OUT)
-    
-    logging.basicConfig()
-    logging.getLogger('pygatt').setLevel(logging.WARN)
-        
+    #print(sys.version)
     adapters = []
-    for i in range(0, 3):
-        adapters.append(pygatt.GATTToolBackend())
+    try:
+        adapters = []
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
+        GPIO.setup(16,GPIO.OUT)
         
-    for adapter in adapters:
-        adapter.start()
-
-    app = QApplication(sys.argv)
-    app.setStyle('Fusion')
+        logging.basicConfig()
+        logging.getLogger('pygatt').setLevel(logging.DEBUG)
+        
+        for i in range(0, 3):
+            adapters.append(pygatt.GATTToolBackend())
+        
+        print "Created adapters count: ", len(adapters), adapters[0]._hci_device
+        
+        for adapter in adapters:
+            adapter.start()
+        
+        #devs = adapters[0].scan(timeout=5, run_as_root=True)
+        #for dev in devs:                    
+        #    print "\tUrzadzenie ", dev["name"], " o adresie: ", dev["address"]
+        #    newDevice = TestoDevice(dev["name"], dev["address"], adapters[1])
+        #print adapters
     
-    palette = QPalette()
-    palette.setColor(QPalette.Window, QColor(53,53,53))
-    palette.setColor(QPalette.WindowText, Qt.white)
-    palette.setColor(QPalette.Base, QColor(15,15,15))
-    palette.setColor(QPalette.AlternateBase, QColor(53,53,53))
-    palette.setColor(QPalette.ToolTipBase, Qt.black)
-    palette.setColor(QPalette.ToolTipText, Qt.white)
-    palette.setColor(QPalette.Text, Qt.white)
-    palette.setColor(QPalette.Button, QColor(53,53,53))
-    palette.setColor(QPalette.ButtonText, Qt.white)
-    palette.setColor(QPalette.BrightText, Qt.red)
-         
-    palette.setColor(QPalette.Highlight, QColor(40,60,160))
-    palette.setColor(QPalette.HighlightedText, Qt.white)
-    app.setPalette(palette)
-    
-    translator = QTranslator(app)
-    locale = QLocale.system().name()
-    
-    path = QLibraryInfo.location(QLibraryInfo.TranslationsPath)
-    translator.load('qt_%s' % locale, path)
-    app.installTranslator(translator)
-    
-    mw = MainWindow(adapters)
-    
-    sys.exit(app.exec_())
+        app = QApplication(sys.argv)
+        app.setStyle('Fusion')
+        
+        palette = QPalette()
+        palette.setColor(QPalette.Window, QColor(53,53,53))
+        palette.setColor(QPalette.WindowText, Qt.white)
+        palette.setColor(QPalette.Base, QColor(15,15,15))
+        palette.setColor(QPalette.AlternateBase, QColor(53,53,53))
+        palette.setColor(QPalette.ToolTipBase, Qt.black)
+        palette.setColor(QPalette.ToolTipText, Qt.white)
+        palette.setColor(QPalette.Text, Qt.white)
+        palette.setColor(QPalette.Button, QColor(53,53,53))
+        palette.setColor(QPalette.ButtonText, Qt.white)
+        palette.setColor(QPalette.BrightText, Qt.red)
+             
+        palette.setColor(QPalette.Highlight, QColor(40,60,160))
+        palette.setColor(QPalette.HighlightedText, Qt.white)
+        app.setPalette(palette)
+        
+        translator = QTranslator(app)
+        locale = QLocale.system().name()
+        
+        path = QLibraryInfo.location(QLibraryInfo.TranslationsPath)
+        translator.load('qt_%s' % locale, path)
+        app.installTranslator(translator)
+        
+        mw = MainWindow(adapters)
+        
+        sys.exit(app.exec_())
+    finally:
+        print "Unexpected error:", sys.exc_info()[0]
+        print "Stopping bluetooth adapters"
+        for adapter in adapters:
+            adapter.stop()
