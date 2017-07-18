@@ -446,7 +446,7 @@ class MainWindow(QMainWindow):
         else:
             event.ignore()        
             
-class TestoConcentrator:
+class VentilatorMonitor:
     ##################################################################################################################
     # variables
     ##################################################################################################################
@@ -517,5 +517,4 @@ class TestoConcentrator:
             print "Unexpected error:", sys.exc_info()[0]
             print "Stopping bluetooth adapters"
             for adapter in adapters:
-                adapter.stop()
-        
+                adapter.stop()        
