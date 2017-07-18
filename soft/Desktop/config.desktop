@@ -2,7 +2,7 @@
 Name=Konfiguracja
 Comment=Konfiguracja systemu monitorowania wentylatora
 Icon=/usr/share/icons/dk-wm/config.png
-Exec=/opt/dk/wm/VentilatorMonitorConfig
+Exec=VentilatorMonitorConfig
 Type=Application
 Encoding=UTF-8
 Terminal=false

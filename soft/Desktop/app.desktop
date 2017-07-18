@@ -1,8 +1,8 @@
 [Desktop Entry]
 Name=Monitoring wentylatora
-Comment=System monitorowania konitora
+Comment=System monitorowania wentylatora
 Icon=/usr/share/icons/dk-wm/app.png
-Exec=/opt/dk/wm/VentilatorMonitor
+Exec=sudo VentilatorMonitorStart
 Type=Application
 Encoding=UTF-8
 Terminal=false
