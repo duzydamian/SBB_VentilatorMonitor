@@ -36,6 +36,7 @@ class TestoDevice(object):
         self.battery = 0.0
         self.temperature = 0.0
         self.velocity = 0.0
+        self.differentialPressure = 0.0
         self.data_to_log = bytearray()
         #self.dataFileTemperature = DataFile(self.name, 'Temperature')
         #self.dataFileVelocity = DataFile(self.name, 'Velocity')
@@ -96,6 +97,12 @@ class TestoDevice(object):
 
             #print (datetime.datetime.now().strftime("%H:%M:%S>") + ' ' + self.name + '> '),
             if len(self.data_to_log) > 12:
+                if self.data_to_log[12]==0x44: #D > DifferentialPressure
+                    #file_to_log_analized.write(''.join('{:02x}'.format(x) for x in data_to_log[32:36]) + ' ')
+                    #file_to_log_analized.write(''.join('{:02x}'.format(x) for x in data_to_log[36:]) + ' ')
+                    #file_to_log_analized.write(data_to_log[12:32] + ' ')
+                    #file_to_log_analized.write(str(struct.unpack('f', data_to_log[32:36])[0]) + '\n')
+                    self.differentialPressure = struct.unpack('f', self.data_to_log[32:36])[0]
                 if self.data_to_log[12]==0x42: #B > BatteryLevel
                     #print (self.data_to_log[12:24] + ' '),
                     #print (str(struct.unpack('f', self.data_to_log[24:28])[0]))

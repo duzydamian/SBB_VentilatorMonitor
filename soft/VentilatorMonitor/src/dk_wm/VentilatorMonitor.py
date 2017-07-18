@@ -26,6 +26,33 @@ import logging
 import pkg_resources
 from TestoDevice import TestoDevice
 
+class AboutDialog(QMessageBox):
+    def __init__(self, version):
+        super(AboutDialog, self).__init__()
+        self.setIcon(QMessageBox.Information)
+        self.setWindowTitle('O programie')
+        self.setText('Program do monitorowania wentylatora oraz warunków panujących w kanale i jego otoczeniu.')
+        self.setInformativeText('Autor:    Damian Karbowiak<br> \
+                                    E-mail    dk.karbowiak@gmail.com<br> \
+                                    Wersja programu:    '+version)
+        self.setStandardButtons(QMessageBox.Ok)
+        self.button = self.button(QMessageBox.Ok)
+        self.button.setText('OK')
+        self.button.setFixedSize(80, 80)
+        
+        self.exec_()
+        
+    def buttonSelected(self):
+        return self.clickedButton()
+    
+    def YesOrNo(self):
+        if self.clickedButton() == self.buttonY:
+            return True
+        elif self.clickedButton() == self.buttonN:
+            return False
+        else:
+            return False
+        
 class AckDialog(QMessageBox):
     def __init__(self, text, textExtra=''):
         super(AckDialog, self).__init__()
@@ -196,7 +223,7 @@ class MainWindow(QMainWindow):
         self.curve3 = self.p3.plot(pen=(0,0,255), name="Blue Z curve")
         self.p1.setYRange(-20.0, 60.0)
         self.p2.setYRange(0.0, 30.0)
-        self.p3.setYRange(-1500.0, 1500.0)
+        self.p3.setYRange(-150.0, 150.0)
         self.data = [0]*100
         self.data2 = [0]*100
         self.data3 = [0]*100
@@ -335,7 +362,7 @@ class MainWindow(QMainWindow):
         GPIO.output(16, GPIO.LOW)
     
     def about(self):
-        pass
+        about = AboutDialog(self.version)
     
     #def help(self):
     #    pass
@@ -369,7 +396,7 @@ class MainWindow(QMainWindow):
                 self.setColorText(self.batteryDev1, "{0:.2f}".format(0), Qt.yellow)
             
             if self.diffSensor <> None:
-                self.pressureDiffValue.setText("{0:.2f}".format(-100))                
+                self.pressureDiffValue.setText("{0:.2f}".format(self.diffSensor.differentialPressure/100.0))                
                 self.batteryDev2.setText("{0:.2f}".format(self.diffSensor.battery))                
             else:
                 self.setColorText(self.pressureDiffValue, "{0:.2f}".format(0), Qt.yellow)
@@ -381,16 +408,17 @@ class MainWindow(QMainWindow):
             #s = np.array([time])
             #v = np.array([temperature])
             #self.staticPlt.plot(s, v, pen='r', symbol='o')
-            X = int(temperature)
-            Y = int(humidity)
-            Z = int(pressure)
+            #X = int(temperature)
+            #Y = int(humidity)
+            #Z = int(pressure)
             if self.velocitySensor <> None:
                 self.data.pop(0)
                 self.data.append(self.velocitySensor.temperature)
                 self.data2.pop(0)
                 self.data2.append(self.velocitySensor.velocity)
-            self.data3.pop(0)
-            self.data3.append(int(Z))
+            if self.diffSensor <> None:
+                self.data3.pop(0)
+                self.data3.append(self.diffSensor.differentialPressure/100.0)
             #xdata = np.array(data, dtype='float64')
             self.curve.setData(self.data)
             self.curve2.setData(self.data2)
