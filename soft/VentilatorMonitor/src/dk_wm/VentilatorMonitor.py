@@ -98,7 +98,7 @@ class MainWindow(QMainWindow):
         fontUB.setBold(True)
         fontUB.setUnderline(True)
         
-        self.headerText = QLabel("System monitorowania wentylatora Damian Karbowiak "+self.version)
+        self.headerText = QLabel("System monitorowania wentylatora wersja "+self.version)
         self.headerText.setFont(fontUB)
         self.headerText.setAlignment(Qt.AlignCenter)
         #self.headerText.setStyleSheet("QLabel {background-color: red;}")
@@ -133,7 +133,7 @@ class MainWindow(QMainWindow):
         
         layoutL.addWidget(QLabel("Temperatura"), 0, 0)
         layoutL.addWidget(self.temperatureValue, 0, 1, Qt.AlignCenter)
-        layoutL.addWidget(QLabel("st. C"), 0, 2)
+        layoutL.addWidget(QLabel("°C"), 0, 2)
         layoutL.addWidget(QLabel("Ciśnienie"), 1, 0)
         layoutL.addWidget(self.pressureValue, 1, 1, Qt.AlignCenter)
         layoutL.addWidget(QLabel("hPa"), 1, 2)
@@ -158,21 +158,21 @@ class MainWindow(QMainWindow):
         self.batteryDev1 = QLabel("0.0")        
         self.batteryDev2 = QLabel('0.0')        
         
+        layoutR.addWidget(QLabel("Poziom baterii T405i"), 0, 0)
+        layoutR.addWidget(self.batteryDev1, 0, 1, Qt.AlignCenter)
+        layoutR.addWidget(QLabel("%"), 0, 2)
         layoutR.addWidget(QLabel("Temperatura"), 1, 0)
         layoutR.addWidget(self.temperatureCanalValue, 1, 1, Qt.AlignCenter)
-        layoutR.addWidget(QLabel("st. C"), 1, 2)
+        layoutR.addWidget(QLabel("°C"), 1, 2)
         layoutR.addWidget(QLabel("Prędkość powietrza"), 2, 0)
         layoutR.addWidget(self.velocityValue, 2, 1, Qt.AlignCenter)
         layoutR.addWidget(QLabel("m/s"), 2, 2)
-        layoutR.addWidget(QLabel("Różnica ciśnienień"), 3, 0)
-        layoutR.addWidget(self.pressureDiffValue, 3, 1, Qt.AlignCenter)
-        layoutR.addWidget(QLabel("hPa"), 3, 2)
-        layoutR.addWidget(QLabel("Poziom baterii"), 4, 0)
-        layoutR.addWidget(self.batteryDev1, 4, 1, Qt.AlignCenter)
-        layoutR.addWidget(QLabel("%"), 4, 2)
-        layoutR.addWidget(QLabel("Poziom baterii"), 5, 0)
-        layoutR.addWidget(self.batteryDev2, 5, 1, Qt.AlignCenter)
-        layoutR.addWidget(QLabel("%"), 5, 2)
+        layoutR.addWidget(QLabel("Poziom baterii T510i"), 3, 0)
+        layoutR.addWidget(self.batteryDev2, 3, 1, Qt.AlignCenter)
+        layoutR.addWidget(QLabel("%"), 3, 2)
+        layoutR.addWidget(QLabel("Różnica ciśnienień"), 4, 0)
+        layoutR.addWidget(self.pressureDiffValue, 4, 1, Qt.AlignCenter)
+        layoutR.addWidget(QLabel("hPa"), 4, 2)                
         
         topright.setLayout(layoutR)
 
@@ -185,9 +185,9 @@ class MainWindow(QMainWindow):
         
         self.staticPlt = pg.GraphicsWindow(title="Wykres")
         #self.staticPlt.setInteractive(True)
-        self.p1 = self.staticPlt.addPlot(title="Temperatura")
-        self.p2 = self.staticPlt.addPlot(title="Wilgotność")
-        self.p3 = self.staticPlt.addPlot(title="Ciśnienie")
+        self.p1 = self.staticPlt.addPlot(title="Temperatura [°C]")
+        self.p2 = self.staticPlt.addPlot(title="Prędkośc powietrza [m/s]")
+        self.p3 = self.staticPlt.addPlot(title="Różnica ciśnień [hPa]")
         self.curve = self.p1.plot(pen=(255,0,0), name="Red X curve")
         self.curve2 = self.p2.plot(pen=(0,255,0), name="Green Y curve")
         self.curve3 = self.p3.plot(pen=(0,0,255), name="Blue Z curve")
@@ -415,9 +415,7 @@ class MainWindow(QMainWindow):
                 self.statusBar().showMessage('Wyszukiwanie urządzeń Bluetooth')
                 devs = self.adapters[0].scan(timeout=5, run_as_root=True)
                 for dev in devs:                    
-                    print "\tUrzadzenie ", dev["name"], " o adresie: ", dev["address"]
-                    print type(dev["name"]), type(dev["address"])
-                    #newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[1])
+                    #print "\tUrzadzenie ", dev["name"], " o adresie: ", dev["address"]
                     
                     if dev["name"].find('T405i')<>-1:                        
                         self.statusBar().showMessage('Łączenie z czujnikiem ' + str(dev["name"]))
@@ -478,7 +476,7 @@ class VentilatorMonitor:
             for i in range(0, 3):
                 adapters.append(pygatt.GATTToolBackend())
             
-            print "Created adapters count: ", len(adapters), adapters[0]._hci_device
+            #print "Created adapters count: ", len(adapters), adapters[0]._hci_device
             
             for adapter in adapters:
                 adapter.start()
@@ -520,6 +518,6 @@ class VentilatorMonitor:
             sys.exit(app.exec_())
         finally:
             print "Unexpected error:", sys.exc_info()[0]
-            print "Stopping bluetooth adapters"
+            print "Stopping bluetooth adapters", adapters
             for adapter in adapters:
                 adapter.stop()        
