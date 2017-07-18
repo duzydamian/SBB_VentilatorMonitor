@@ -180,9 +180,9 @@ class MainWindow(QMainWindow):
         self.curve = self.p1.plot(pen=(255,0,0), name="Red X curve")
         self.curve2 = self.p2.plot(pen=(0,255,0), name="Green Y curve")
         self.curve3 = self.p3.plot(pen=(0,0,255), name="Blue Z curve")
-        self.p1.setYRange(-10,50)
-        self.p2.setYRange(0,100)
-        self.p3.setYRange(700,1100)
+        self.p1.setYRange(-20.0, 60.0)
+        self.p2.setYRange(0.0, 30.0)
+        self.p3.setYRange(-1500.0, 1500.0)
         self.data = [0]*100
         self.data2 = [0]*100
         self.data3 = [0]*100
@@ -342,11 +342,31 @@ class MainWindow(QMainWindow):
             self.pressureValue.setText("{0:.2f}".format(pressure))
             self.humidityValue.setText("{0:.2f}".format(humidity))
             
-            self.temperatureCanalValue.setText("{0:.2f}".format(random.uniform(1, 40)))
-            self.velocityValue.setText("{0:.2f}".format(random.uniform(1, 30)))
-            self.pressureDiffValue.setText("{0:.2f}".format(random.uniform(1, 1500)))
-            self.batteryDev1.setText("{0:.2f}".format(random.uniform(1, 100)))
-            self.batteryDev2.setText("{0:.2f}".format(random.uniform(1, 100)))
+            if self.velocitySensor <> None:
+                self.temperatureCanalValue.setText("{0:.2f}".format(self.velocitySensor.temperature))
+                self.temperatureCanalValue.setStyleSheet('color: white')
+                self.velocityValue.setText("{0:.2f}".format(self.velocitySensor.velocity))
+                self.velocityValue.setStyleSheet('color: white')
+                self.batteryDev1.setText("{0:.2f}".format(self.velocitySensor.battery))
+                self.batteryDev1.setStyleSheet('color: white')
+            else:
+                self.temperatureCanalValue.setText("{0:.2f}".format(0))
+                self.temperatureCanalValue.setStyleSheet('color: yellow')
+                self.velocityValue.setText("{0:.2f}".format(0))
+                self.velocityValue.setStyleSheet('color: yellow')
+                self.batteryDev1.setText("{0:.2f}".format(0))
+                self.batteryDev1.setStyleSheet('color: yellow')
+            
+            if self.diffSensor <> None:
+                self.pressureDiffValue.setText("{0:.2f}".format(-100))
+                self.pressureDiffValue.setStyleSheet('color: white')
+                self.batteryDev2.setText("{0:.2f}".format(self.diffSensor.battery))
+                self.batteryDev2.setStyleSheet('color: white')
+            else:
+                self.pressureDiffValue.setText("{0:.2f}".format(0))
+                self.pressureDiffValue.setStyleSheet('color: yellow')
+                self.batteryDev2.setText("{0:.2f}".format(0))
+                self.batteryDev2.setStyleSheet('color: yellow')
             
             #s = np.array([time])
             #v = np.array([temperature])
@@ -354,10 +374,11 @@ class MainWindow(QMainWindow):
             X = int(temperature)
             Y = int(humidity)
             Z = int(pressure)
-            self.data.pop(0)
-            self.data.append(int(X))
-            self.data2.pop(0)
-            self.data2.append(int(Y))
+            if self.velocitySensor <> None:
+                self.data.pop(0)
+                self.data.append(self.velocitySensor.temperature)
+                self.data2.pop(0)
+                self.data2.append(self.velocitySensor.velocity)
             self.data3.pop(0)
             self.data3.append(int(Z))
             #xdata = np.array(data, dtype='float64')
