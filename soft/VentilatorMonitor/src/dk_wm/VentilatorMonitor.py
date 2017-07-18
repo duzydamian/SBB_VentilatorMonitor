@@ -74,6 +74,16 @@ class MainWindow(QMainWindow):
             #print "Creating", path
             os.makedirs(path)
             
+    def setColorText(self, label, text, color):
+        if color == Qt.white:
+            label.setText(text)
+        elif color == Qt.yellow:
+            label.setText("<font color='yellow'>" + text + "</font>")
+        elif color == Qt.red:
+            label.setText("<font color='red'>" + text + "</font>")
+        else:
+            label.setText(text)
+        
     def initUI(self):
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setWindowState(Qt.WindowMaximized)
@@ -145,8 +155,8 @@ class MainWindow(QMainWindow):
         self.temperatureCanalValue = QLabel("0.0")
         self.velocityValue = QLabel("0.0")
         self.pressureDiffValue = QLabel("0.0")
-        self.batteryDev1 = QLabel("0.0")
-        self.batteryDev2 = QLabel("0.0")
+        self.batteryDev1 = QLabel("0.0")        
+        self.batteryDev2 = QLabel('0.0')        
         
         layoutR.addWidget(QLabel("Temperatura"), 1, 0)
         layoutR.addWidget(self.temperatureCanalValue, 1, 1, Qt.AlignCenter)
@@ -314,12 +324,12 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage('Rozpoczęto logowanie do pliku: '+str(self.fileName))
     
     def stop(self):
-        GPIO.output(16,GPIO.HIGH)
+        GPIO.output(16, GPIO.HIGH)
         self.timerLogging.stop()
         self.csvFile.close()
         self.statusBar().showMessage('Zakończono logowanie do pliku: '+str(self.fileName))
-        time.sleep(0.1)
-        GPIO.output(16,GPIO.LOW)
+        time.sleep(1)
+        GPIO.output(16, GPIO.LOW)
     
     def about(self):
         pass
@@ -345,29 +355,25 @@ class MainWindow(QMainWindow):
             
             if self.velocitySensor <> None:
                 self.temperatureCanalValue.setText("{0:.2f}".format(self.velocitySensor.temperature))
-                self.temperatureCanalValue.setStyleSheet('color: white')
                 self.velocityValue.setText("{0:.2f}".format(self.velocitySensor.velocity))
-                self.velocityValue.setStyleSheet('color: white')
                 self.batteryDev1.setText("{0:.2f}".format(self.velocitySensor.battery))
-                self.batteryDev1.setStyleSheet('color: white')
             else:
                 self.temperatureCanalValue.setText("{0:.2f}".format(0))
-                self.temperatureCanalValue.setStyleSheet('color: yellow')
                 self.velocityValue.setText("{0:.2f}".format(0))
-                self.velocityValue.setStyleSheet('color: yellow')
                 self.batteryDev1.setText("{0:.2f}".format(0))
-                self.batteryDev1.setStyleSheet('color: yellow')
+                self.setColorText(self.temperatureCanalValue, "{0:.2f}".format(0), Qt.yellow)
+                self.setColorText(self.velocityValue, "{0:.2f}".format(0), Qt.yellow)
+                self.setColorText(self.batteryDev1, "{0:.2f}".format(0), Qt.yellow)
             
             if self.diffSensor <> None:
-                self.pressureDiffValue.setText("{0:.2f}".format(-100))
-                self.pressureDiffValue.setStyleSheet('color: white')
-                self.batteryDev2.setText("{0:.2f}".format(self.diffSensor.battery))
-                self.batteryDev2.setStyleSheet('color: white')
+                self.pressureDiffValue.setText("{0:.2f}".format(-100))                
+                self.batteryDev2.setText("{0:.2f}".format(self.diffSensor.battery))                
             else:
-                self.pressureDiffValue.setText("{0:.2f}".format(0))
-                self.pressureDiffValue.setStyleSheet('color: yellow')
-                self.batteryDev2.setText("{0:.2f}".format(0))
-                self.batteryDev2.setStyleSheet('color: yellow')
+                self.setColorText(self.pressureDiffValue, "{0:.2f}".format(0), Qt.yellow)
+                self.setColorText(self.batteryDev2, "{0:.2f}".format(0), Qt.yellow)
+                #self.pressureDiffValue.setText("{0:.2f}".format(0))
+                #self.batteryDev2.setText("{0:.2f}".format(0))
+                #self.batteryDev2.setStyleSheet('color: yellow')
             
             #s = np.array([time])
             #v = np.array([temperature])
@@ -388,7 +394,7 @@ class MainWindow(QMainWindow):
             self.curve3.setData(self.data3)
             
         elif e.timerId()==self.timerLogging.timerId(): # data logging
-            GPIO.output(16,GPIO.LOW)
+            GPIO.output(16, GPIO.LOW)
             date = datetime.datetime.now().strftime("%Y-%m-%d")
             time = datetime.datetime.now().strftime("%H:%M:%S")
             
@@ -404,24 +410,23 @@ class MainWindow(QMainWindow):
             self.logCount += 1
             self.statusBar().showMessage('Wpisano rekordów do pliku z danymi: '+str(self.logCount))
         elif e.timerId()==self.timerGATTConnect.timerId():
-            #print adapters
-            print self.velocitySensor, self.diffSensor
+            #print adapters            
             if self.velocitySensor == None or self.diffSensor == None:
+                self.statusBar().showMessage('Wyszukiwanie urządzeń Bluetooth')
                 devs = self.adapters[0].scan(timeout=5, run_as_root=True)
                 for dev in devs:                    
                     print "\tUrzadzenie ", dev["name"], " o adresie: ", dev["address"]
+                    print type(dev["name"]), type(dev["address"])
                     #newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[1])
                     
-                    if dev["name"].find('405')<>-1:
-                        print 'velo'
+                    if dev["name"].find('T405i')<>-1:                        
+                        self.statusBar().showMessage('Łączenie z czujnikiem ' + str(dev["name"]))
                         newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[1])
                         self.velocitySensor = newDevice
-                    else:
-                        print 'diff'
+                    elif dev["name"].find('T510i')<>-1:
+                        self.statusBar().showMessage('Łączenie z czujnikiem ' + str(dev["name"]))
                         newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[2])
-                        self.diffSensor = newDevice
-                        
-            print self.velocitySensor, self.diffSensor
+                        self.diffSensor = newDevice                        
     
     def restart(self):
         ack = AckDialog("Czy napewno chcesz uruchomić ponownie urzązdenie?", "Spowoduje to zakończenie aktualnej sesji logowania")
