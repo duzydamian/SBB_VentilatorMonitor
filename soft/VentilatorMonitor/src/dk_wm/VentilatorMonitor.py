@@ -61,6 +61,8 @@ class MainWindow(QMainWindow):
         self.adapters = adapters
         self.version = pkg_resources.get_distribution("dk_wm").version
         self.initUI()
+        self.velocitySensor = None
+        self.diffSensor = None
         
     
         #function check if dir exists
@@ -381,10 +383,23 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage('Wpisano rekordów do pliku z danymi: '+str(self.logCount))
         elif e.timerId()==self.timerGATTConnect.timerId():
             #print adapters
-            devs = self.adapters[0].scan(timeout=5, run_as_root=False)
-            for dev in devs:                    
-                print "\tUrzadzenie ", dev["name"], " o adresie: ", dev["address"]
-                newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[1])
+            print self.velocitySensor, self.diffSensor
+            if self.velocitySensor == None or self.diffSensor == None:
+                devs = self.adapters[0].scan(timeout=5, run_as_root=True)
+                for dev in devs:                    
+                    print "\tUrzadzenie ", dev["name"], " o adresie: ", dev["address"]
+                    #newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[1])
+                    
+                    if dev["name"].find('405')<>-1:
+                        print 'velo'
+                        newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[1])
+                        self.velocitySensor = newDevice
+                    else:
+                        print 'diff'
+                        newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[2])
+                        self.diffSensor = newDevice
+                        
+            print self.velocitySensor, self.diffSensor
     
     def restart(self):
         ack = AckDialog("Czy napewno chcesz uruchomić ponownie urzązdenie?", "Spowoduje to zakończenie aktualnej sesji logowania")
@@ -420,7 +435,7 @@ if __name__ == '__main__' or __name__ == 'dk_wm.VentilatorMonitor' :
         GPIO.setup(16,GPIO.OUT)
         
         logging.basicConfig()
-        logging.getLogger('pygatt').setLevel(logging.DEBUG)
+        logging.getLogger('pygatt').setLevel(logging.WARN)
         
         for i in range(0, 3):
             adapters.append(pygatt.GATTToolBackend())
