@@ -131,7 +131,6 @@ class MainWindow(QMainWindow):
         self.headerText = QLabel("System monitorowania wentylatora wersja "+self.version)
         self.headerText.setFont(fontUB18)
         self.headerText.setAlignment(Qt.AlignCenter)
-        #self.headerText.setStyleSheet("QLabel {background-color: red;}")
         self.headerIcon1 = QLabel("System monitorowania wentylatora")
         self.headerIcon1.setPixmap(QPixmap("/opt/dk/wm/images/icon1_small.png"))
         self.headerIcon2 = QLabel("System monitorowania wentylatora")
@@ -152,10 +151,10 @@ class MainWindow(QMainWindow):
         topleft.setFont(font)
         
         layoutL = QGridLayout()        
-        layoutL.setColumnStretch(2, 1)
+        #layoutL.setColumnStretch(2, 1)
         layoutL.setColumnMinimumWidth(0, 150)
         layoutL.setColumnMinimumWidth(1, 150)
-        layoutL.setColumnMinimumWidth(2, 150)
+        #layoutL.setColumnMinimumWidth(2, 150)
         
         self.temperatureValue = QLabel("0.0")        
         self.pressureValue = QLabel("0.0")
@@ -177,10 +176,10 @@ class MainWindow(QMainWindow):
         #stopright.setStyleSheet("QWidget {border:2px solid rgb(0, 0, 0); }")
         topright.setFont(font)
         layoutR = QGridLayout()
-        layoutR.setColumnStretch(2, 1)
+        #layoutR.setColumnStretch(2, 1)
         layoutR.setColumnMinimumWidth(0, 150)
         layoutR.setColumnMinimumWidth(1, 150)
-        layoutR.setColumnMinimumWidth(2, 150)
+        #layoutR.setColumnMinimumWidth(2, 150)
         
         self.temperatureCanalValue = QLabel("0.0")
         self.velocityValue = QLabel("0.0")
@@ -228,14 +227,62 @@ class MainWindow(QMainWindow):
         self.data2 = [0]*100
         self.data3 = [0]*100
         
+        label3 = QLabel("Strumień")
+        label3.setFont(fontUB)
+        
+        topS = QWidget()        
+        topS.setFont(font)
+        
+        layoutS = QGridLayout()        
+        layoutS.setColumnStretch(2, 1)
+        layoutS.setColumnMinimumWidth(0, 150)
+        layoutS.setColumnMinimumWidth(1, 150)
+        
+        self.stream1 = QLabel("0.0")        
+        self.stream2 = QLabel("0.0")
+        
+        layoutS.addWidget(QLabel("Strumień objętości"), 0, 0)
+        layoutS.addWidget(self.stream1, 0, 1, Qt.AlignCenter)
+        layoutS.addWidget(QLabel("m3/s"), 0, 2)
+        layoutS.addWidget(QLabel("Strumień objętości"), 1, 0)
+        layoutS.addWidget(self.stream2, 1, 1, Qt.AlignCenter)
+        layoutS.addWidget(QLabel("m3/s"), 1, 2)
+        
+        topS.setLayout(layoutS)
+        
+        self.staticPltStream = pg.GraphicsWindow(title="Wykres")
+        #self.staticPltStream.setInteractive(True)
+        self.p1Stream = self.staticPltStream.addPlot(title="Strumień []")
+        self.curveStream = self.p1Stream.plot(pen=(255,255,0), name="Yellow X curve")
+        self.p1Stream.setYRange(-1000.0, 1000.0)
+        self.dataStream = [0]*100
+        
+        mainL = QWidget()
+        layoutMainL = QGridLayout()
+        layoutMainL.addWidget(label1)
+        layoutMainL.addWidget(topleft)
+        layoutMainL.addWidget(label2)
+        layoutMainL.addWidget(topright)        
+        mainL.setLayout(layoutMainL)
+        
+        mainR = QWidget()
+        layoutMainR = QGridLayout()
+        layoutMainR.addWidget(label3)
+        layoutMainR.addWidget(topS)
+        layoutMainR.addWidget(self.staticPltStream)        
+        mainR.setLayout(layoutMainR)
+        
+        mainLR = QWidget()
+        layoutMainLR = QGridLayout()
+        layoutMainLR.addWidget(mainL, 0, 0)
+        layoutMainLR.addWidget(mainR, 0, 1)
+        mainLR.setLayout(layoutMainLR)
+        
         main = QWidget()
         layout = QGridLayout()
         layout.addWidget(self.header)
         layout.addWidget(self.dateTime)
-        layout.addWidget(label1)
-        layout.addWidget(topleft)
-        layout.addWidget(label2)
-        layout.addWidget(topright)
+        layout.addWidget(mainLR)        
         layout.addWidget(self.staticPlt)
         main.setLayout(layout)
 
