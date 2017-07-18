@@ -22,6 +22,7 @@ import numpy as np
 import RPi.GPIO as GPIO
 import pygatt
 import logging
+import pkg_resources
 from TestoDevice import TestoDevice
 
 class AckDialog(QMessageBox):
@@ -58,6 +59,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         
         self.adapters = adapters
+        self.version = pkg_resources.get_distribution("dk_wm").version
         self.initUI()
         
     
@@ -83,7 +85,7 @@ class MainWindow(QMainWindow):
         fontUB.setBold(True)
         fontUB.setUnderline(True)
         
-        self.headerText = QLabel("System monitorowania wentylatora Damian Karbowiak")
+        self.headerText = QLabel("System monitorowania wentylatora Damian Karbowiak "+self.version)
         self.headerText.setFont(fontUB)
         self.headerText.setAlignment(Qt.AlignCenter)
         #self.headerText.setStyleSheet("QLabel {background-color: red;}")
