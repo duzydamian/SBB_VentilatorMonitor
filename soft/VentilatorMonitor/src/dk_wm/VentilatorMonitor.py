@@ -23,6 +23,7 @@ import numpy as np
 import RPi.GPIO as GPIO
 import pygatt
 import logging
+import time
 import pkg_resources
 from TestoDevice import TestoDevice
 
@@ -375,38 +376,46 @@ class MainWindow(QMainWindow):
         
             
     def start(self):
-        GPIO.output(16,GPIO.HIGH)
-        self.logCount = 0
-        pen = os.listdir('/media/pi/')
-        #print pen, type(pen), len(pen)
-        if len(pen) == 0:
-            self.path = '/home/pi/Desktop/Dane_z_systemu/'
+        if not self.timerLogging.isActive():
+            GPIO.output(16,GPIO.HIGH)
+            self.logCount = 0
+            pen = os.listdir('/media/pi/')
+            #print pen, type(pen), len(pen)
+            if len(pen) == 0:
+                self.path = '/home/pi/Desktop/Dane_z_systemu/'
+            else:
+                self.path = '/media/pi/' + pen[0] + '/Dane_z_systemu/'
+            
+            #print "Path", path
+            
+            self.checkPathAndCreate(self.path)
+            self.fileName = self.path + datetime.datetime.now().strftime("%d-%m-%Y_%H-%M-%S.csv")
+            #print "Filename", self.fileName
+            self.csvFile = open(self.fileName, 'w')
+            self.fieldnames = ['Data', 'Godzina', \
+                                'Temperatura otoczenia', 'Wilgotność powietrza', 'Ciśnienie atmosferyczne', \
+                               'Temperatura w kanale', 'Prędkość powietrza w kanale', 'Różnica ciśnienień w kanale', \
+                               'Strumień', 'Strumień']
+            self.writer = csv.DictWriter(self.csvFile, delimiter=';', fieldnames=self.fieldnames)
+            
+            self.writer.writeheader()
+            
+            self.timerLogging.start(1000, self)
+            self.statusBar().showMessage('Rozpoczęto logowanie do pliku: '+str(self.fileName))
         else:
-            self.path = '/media/pi/' + pen[0] + '/Dane_z_systemu/'
-        
-        #print "Path", path
-        
-        self.checkPathAndCreate(self.path)
-        self.fileName = self.path + datetime.datetime.now().strftime("%d-%m-%Y_%H-%M-%S.csv")
-        #print "Filename", self.fileName
-        self.csvFile = open(self.fileName, 'w')
-        self.fieldnames = ['Data', 'Godzina', \
-                            'Temperatura otoczenia', 'Wilgotność powietrza', 'Ciśnienie atmosferyczne', \
-                           'Temperatura w kanale', 'Prędkość powietrza w kanale', 'Różnica ciśnienień w kanale']
-        self.writer = csv.DictWriter(self.csvFile, delimiter=';', fieldnames=self.fieldnames)
-        
-        self.writer.writeheader()
-        
-        self.timerLogging.start(1000, self)
-        self.statusBar().showMessage('Rozpoczęto logowanie do pliku: '+str(self.fileName))
+            self.statusBar().showMessage('Logowanie do ppliku już uruchomione')
     
     def stop(self):
-        GPIO.output(16, GPIO.HIGH)
-        self.timerLogging.stop()
-        self.csvFile.close()
-        self.statusBar().showMessage('Zakończono logowanie do pliku: '+str(self.fileName))
-        time.sleep(1)
-        GPIO.output(16, GPIO.LOW)
+        if self.timerLogging.isActive():
+            GPIO.output(16, GPIO.HIGH)
+            self.timerLogging.stop()
+            self.csvFile.close()
+            self.statusBar().showMessage('Zakończono logowanie do pliku: '+str(self.fileName))
+            time.sleep(0.2)
+            GPIO.output(16, GPIO.LOW)
+        else:
+            self.statusBar().showMessage('Brak aktywnego logowania')
+            
     
     def about(self):
         about = AboutDialog(self.version)
@@ -417,6 +426,17 @@ class MainWindow(QMainWindow):
     def timerEvent(self, e):
         #print  e.timerId()        
         if e.timerId()==self.timer.timerId(): # data refresh
+            if self.velocitySensor <> None:
+               if not self.velocitySensor.isConnected():
+                   #print "Usuwanie czujnika predkosci"
+                   self.velocitySensor = None
+            if self.diffSensor <> None:
+                if not self.diffSensor.isConnected():
+                    #print "usuwanie czujnika roznicy cisnien"
+                    self.diffSensor = None
+                    
+            stream1Value = None
+            stream2Value = None
             date = datetime.datetime.now().strftime("%d-%m-%Y")
             time = datetime.datetime.now().strftime("%H:%M:%S\t\t")
             self.dateTime.setText("Aktualna data i godzina:\t\t" + time + date)
@@ -451,7 +471,19 @@ class MainWindow(QMainWindow):
                 #self.pressureDiffValue.setText("{0:.2f}".format(0))
                 #self.batteryDev2.setText("{0:.2f}".format(0))
                 #self.batteryDev2.setStyleSheet('color: yellow')
-            
+            if self.velocitySensor <> None and self.diffSensor <> None:
+                ro = 1.287
+                A = 0.25
+                roCanal = (101325.0+self.diffSensor.differentialPressure)*28.84/8314.0/(273.0+self.velocitySensor.temperature)
+                m = self.velocitySensor.velocity*A*roCanal
+                stream1Value = roCanal/ro
+                stream2Value = m/roCanal
+                #print ro, A, roCanal, m, stream1Value, stream2Value
+                self.stream1.setText("{0:.2f}".format(stream1Value))
+                self.stream2.setText("{0:.2f}".format(stream2Value))
+            else:
+                self.setColorText(self.stream1, "{0:.2f}".format(0), Qt.yellow)
+                self.setColorText(self.stream2, "{0:.2f}".format(0), Qt.yellow)
             #s = np.array([time])
             #v = np.array([temperature])
             #self.staticPlt.plot(s, v, pen='r', symbol='o')
@@ -466,10 +498,16 @@ class MainWindow(QMainWindow):
             if self.diffSensor <> None:
                 self.data3.pop(0)
                 self.data3.append(self.diffSensor.differentialPressure/100.0)
+                
+            if self.velocitySensor <> None and self.diffSensor <> None:
+                if stream1Value <> None and stream2Value <> None:
+                    self.dataStream.pop(0)
+                    self.dataStream.append(stream1Value)
             #xdata = np.array(data, dtype='float64')
             self.curve.setData(self.data)
             self.curve2.setData(self.data2)
             self.curve3.setData(self.data3)
+            self.curveStream.setData(self.dataStream)
             
         elif e.timerId()==self.timerLogging.timerId(): # data logging
             GPIO.output(16, GPIO.LOW)
@@ -524,6 +562,14 @@ class MainWindow(QMainWindow):
 
         if ack.YesOrNo():
             event.accept()
+            self.timer.stop()
+            self.timerLogging.stop()
+            self.timerGATTConnect.stop()
+            if self.velocitySensor <> None:
+               self.velocitySensor.disconnect() 
+            if self.diffSensor <> None:
+                self.diffSensor.disconnect()
+            time.sleep(1)
         else:
             event.ignore()        
             
@@ -596,6 +642,6 @@ class VentilatorMonitor:
             sys.exit(app.exec_())
         finally:
             print "Unexpected error:", sys.exc_info()[0]
-            print "Stopping bluetooth adapters", adapters
+            #print "Stopping bluetooth adapters", adapters
             for adapter in adapters:
                 adapter.stop()        

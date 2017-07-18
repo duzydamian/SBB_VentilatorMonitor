@@ -38,6 +38,7 @@ class TestoDevice(object):
         self.velocity = 0.0
         self.differentialPressure = 0.0
         self.data_to_log = bytearray()
+        self.ready = False
         #self.dataFileTemperature = DataFile(self.name, 'Temperature')
         #self.dataFileVelocity = DataFile(self.name, 'Velocity')
         #self.dataFileBatteryLevel = DataFile(self.name, 'BatteryLevel')
@@ -84,7 +85,8 @@ class TestoDevice(object):
             self.device.char_write_handle(37, self.convert_str_bytearray('04001600000005d7100000004d6561737572656d'), True, 5)
             self.device.char_write_handle(37, self.convert_str_bytearray('656e744379636c656161'), True, 5)
             self.device.char_write_handle(37, self.convert_str_bytearray('110000000000035a'), True, 5)
-                                
+                             
+            self.ready = True   
             #print self.device.get_rssi()
             #print self.device._connected
     def callback_fun(self, handle, data):
@@ -127,3 +129,14 @@ class TestoDevice(object):
             ba.append(int(z,16))
     
         return ba
+    
+    def disconnect(self):
+        self.device.disconnect()
+        self.adapter.stop()
+        
+    def isConnected(self):
+        #print self.ready, self.device._connected
+        if self.ready:
+            return self.device._connected
+        else:
+            return True
