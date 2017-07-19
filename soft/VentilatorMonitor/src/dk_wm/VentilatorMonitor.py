@@ -478,7 +478,7 @@ class MainWindow(QMainWindow):
                 m = self.velocitySensor.velocity*A*roCanal
                 stream1Value = m/ro
                 stream2Value = m/roCanal
-                print ro, A, roCanal, m, stream1Value, stream2Value
+                #print ro, A, roCanal, m, stream1Value, stream2Value
                 self.stream1.setText("{0:.2f}".format(stream1Value))
                 self.stream2.setText("{0:.2f}".format(stream2Value))
             else:
