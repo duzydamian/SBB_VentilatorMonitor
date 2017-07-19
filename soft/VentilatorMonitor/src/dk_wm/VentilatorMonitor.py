@@ -476,9 +476,9 @@ class MainWindow(QMainWindow):
                 A = 0.25
                 roCanal = (101325.0+self.diffSensor.differentialPressure)*28.84/8314.0/(273.0+self.velocitySensor.temperature)
                 m = self.velocitySensor.velocity*A*roCanal
-                stream1Value = roCanal/ro
+                stream1Value = m/ro
                 stream2Value = m/roCanal
-                #print ro, A, roCanal, m, stream1Value, stream2Value
+                print ro, A, roCanal, m, stream1Value, stream2Value
                 self.stream1.setText("{0:.2f}".format(stream1Value))
                 self.stream2.setText("{0:.2f}".format(stream2Value))
             else:
@@ -531,7 +531,7 @@ class MainWindow(QMainWindow):
             #print adapters            
             if self.velocitySensor == None or self.diffSensor == None:
                 self.statusBar().showMessage('Wyszukiwanie urządzeń Bluetooth')
-                devs = self.adapters[0].scan(timeout=5, run_as_root=True)
+                devs = self.adapters[0].scan(timeout=3, run_as_root=True)
                 for dev in devs:                    
                     #print "\tUrzadzenie ", dev["name"], " o adresie: ", dev["address"]
                     
@@ -539,10 +539,12 @@ class MainWindow(QMainWindow):
                         self.statusBar().showMessage('Łączenie z czujnikiem ' + str(dev["name"]))
                         newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[1])
                         self.velocitySensor = newDevice
+                        self.statusBar().showMessage('Połączono z czujnikiem ' + str(dev["name"]))
                     elif dev["name"].find('T510i')<>-1:
                         self.statusBar().showMessage('Łączenie z czujnikiem ' + str(dev["name"]))
                         newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[2])
                         self.diffSensor = newDevice                        
+                        self.statusBar().showMessage('Połączono z czujnikiem ' + str(dev["name"]))
     
     def restart(self):
         ack = AckDialog("Czy napewno chcesz uruchomić ponownie urzązdenie?", "Spowoduje to zakończenie aktualnej sesji logowania")
