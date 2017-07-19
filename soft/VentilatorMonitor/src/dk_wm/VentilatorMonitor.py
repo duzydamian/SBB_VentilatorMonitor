@@ -253,7 +253,7 @@ class MainWindow(QMainWindow):
         
         self.staticPltStream = pg.GraphicsWindow(title="Wykres")
         #self.staticPltStream.setInteractive(True)
-        self.p1Stream = self.staticPltStream.addPlot(title="Strumień []")
+        self.p1Stream = self.staticPltStream.addPlot(title="Strumień [m3/s]")
         self.curveStream = self.p1Stream.plot(pen=(255,255,0), name="Yellow X curve")
         self.p1Stream.setYRange(-1000.0, 1000.0)
         self.dataStream = [0]*100
@@ -521,7 +521,9 @@ class MainWindow(QMainWindow):
                                   self.fieldnames[4]: self.pressureValue.text(), \
                                   self.fieldnames[5]: self.temperatureCanalValue.text(), \
                                   self.fieldnames[6]: self.velocityValue.text(), \
-                                  self.fieldnames[7]: self.pressureDiffValue.text() \
+                                  self.fieldnames[7]: self.pressureDiffValue.text(), \
+                                  self.fieldnames[8]: self.stream1Value.text(), \
+                                  self.fieldnames[9]: self.stream2Value.text() \
                                   })
             self.logCount += 1
             self.statusBar().showMessage('Wpisano rekordów do pliku z danymi: '+str(self.logCount))
