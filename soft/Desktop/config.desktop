@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Konfiguracja
-Comment=Konfiguracja systemu monitorowania wentylatora
-Icon=/usr/share/icons/dk-wm/config.png
-Exec=VentilatorMonitorConfig
-Type=Application
-Encoding=UTF-8
-Terminal=false
-Categories=None;

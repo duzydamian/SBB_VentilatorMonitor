@@ -477,7 +477,7 @@ class MainWindow(QMainWindow):
                 #self.batteryDev2.setStyleSheet('color: yellow')
             if self.velocitySensor <> None and self.diffSensor <> None:
                 ro = 1.287
-                A = 0.25
+                A = 0.06745867
                 roCanal = (101325.0+self.diffSensor.differentialPressure)*28.84/8314.0/(273.0+self.velocitySensor.temperature)
                 m = self.velocitySensor.velocity*A*roCanal
                 stream1Value = m/ro
