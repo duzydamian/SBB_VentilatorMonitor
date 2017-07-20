@@ -202,7 +202,7 @@ class MainWindow(QMainWindow):
         layoutR.addWidget(QLabel("%"), 3, 2)
         layoutR.addWidget(QLabel("Różnica ciśnienień"), 4, 0)
         layoutR.addWidget(self.pressureDiffValue, 4, 1, Qt.AlignCenter)
-        layoutR.addWidget(QLabel("hPa"), 4, 2)                
+        layoutR.addWidget(QLabel("Pa"), 4, 2)                
         
         topright.setLayout(layoutR)
 
@@ -241,13 +241,17 @@ class MainWindow(QMainWindow):
         
         self.stream1 = QLabel("0.0")        
         self.stream2 = QLabel("0.0")
+        self.streamKg = QLabel("0.0")
         
-        layoutS.addWidget(QLabel("Strumień objętości"), 0, 0)
+        layoutS.addWidget(QLabel("Strumień objętościowy"), 0, 0)
         layoutS.addWidget(self.stream1, 0, 1, Qt.AlignCenter)
-        layoutS.addWidget(QLabel("m3/s"), 0, 2)
-        layoutS.addWidget(QLabel("Strumień objętości"), 1, 0)
+        layoutS.addWidget(QLabel("Nm3/s"), 0, 2)
+        layoutS.addWidget(QLabel("Strumień objętościowy"), 1, 0)
         layoutS.addWidget(self.stream2, 1, 1, Qt.AlignCenter)
         layoutS.addWidget(QLabel("m3/s"), 1, 2)
+        layoutS.addWidget(QLabel("Strumień masowy"), 2, 0)
+        layoutS.addWidget(self.streamKg, 2, 1, Qt.AlignCenter)
+        layoutS.addWidget(QLabel("kg/s"), 2, 2)
         
         topS.setLayout(layoutS)
         
@@ -255,7 +259,7 @@ class MainWindow(QMainWindow):
         #self.staticPltStream.setInteractive(True)
         self.p1Stream = self.staticPltStream.addPlot(title="Strumień [m3/s]")
         self.curveStream = self.p1Stream.plot(pen=(255,255,0), name="Yellow X curve")
-        self.p1Stream.setYRange(-1000.0, 1000.0)
+        self.p1Stream.setYRange(-100.0, 100.0)
         self.dataStream = [0]*100
         
         mainL = QWidget()
@@ -395,7 +399,7 @@ class MainWindow(QMainWindow):
             self.fieldnames = ['Data', 'Godzina', \
                                 'Temperatura otoczenia', 'Wilgotność powietrza', 'Ciśnienie atmosferyczne', \
                                'Temperatura w kanale', 'Prędkość powietrza w kanale', 'Różnica ciśnienień w kanale', \
-                               'Strumień', 'Strumień']
+                               'Strumień objętościowy normalny', 'Strumień objętościowy rzeczywisty', "Strumień masowy"]
             self.writer = csv.DictWriter(self.csvFile, delimiter=';', fieldnames=self.fieldnames)
             
             self.writer.writeheader()
@@ -463,7 +467,7 @@ class MainWindow(QMainWindow):
                 self.setColorText(self.batteryDev1, "{0:.2f}".format(0), Qt.yellow)
             
             if self.diffSensor <> None:
-                self.pressureDiffValue.setText("{0:.2f}".format(self.diffSensor.differentialPressure/100.0))                
+                self.pressureDiffValue.setText("{0:.2f}".format(self.diffSensor.differentialPressure))                
                 self.batteryDev2.setText("{0:.2f}".format(self.diffSensor.battery))                
             else:
                 self.setColorText(self.pressureDiffValue, "{0:.2f}".format(0), Qt.yellow)
@@ -481,9 +485,11 @@ class MainWindow(QMainWindow):
                 #print ro, A, roCanal, m, stream1Value, stream2Value
                 self.stream1.setText("{0:.2f}".format(stream1Value))
                 self.stream2.setText("{0:.2f}".format(stream2Value))
+                self.streamKg.setText("{0:.2f}".format(m))
             else:
                 self.setColorText(self.stream1, "{0:.2f}".format(0), Qt.yellow)
                 self.setColorText(self.stream2, "{0:.2f}".format(0), Qt.yellow)
+                self.setColorText(self.streamKg, "{0:.2f}".format(0), Qt.yellow)
             #s = np.array([time])
             #v = np.array([temperature])
             #self.staticPlt.plot(s, v, pen='r', symbol='o')
@@ -502,7 +508,7 @@ class MainWindow(QMainWindow):
             if self.velocitySensor <> None and self.diffSensor <> None:
                 if stream1Value <> None and stream2Value <> None:
                     self.dataStream.pop(0)
-                    self.dataStream.append(stream1Value)
+                    self.dataStream.append(stream2Value)
             #xdata = np.array(data, dtype='float64')
             self.curve.setData(self.data)
             self.curve2.setData(self.data2)
@@ -519,11 +525,12 @@ class MainWindow(QMainWindow):
                                   self.fieldnames[2]: self.temperatureValue.text(), \
                                   self.fieldnames[3]: self.humidityValue.text(), \
                                   self.fieldnames[4]: self.pressureValue.text(), \
-                                  self.fieldnames[5]: self.temperatureCanalValue.text(), \
-                                  self.fieldnames[6]: self.velocityValue.text(), \
-                                  self.fieldnames[7]: self.pressureDiffValue.text(), \
-                                  self.fieldnames[8]: self.stream1Value.text(), \
-                                  self.fieldnames[9]: self.stream2Value.text() \
+                                  self.fieldnames[5]: self.temperatureCanalValue.text().replace('<font color=\'yellow\'>', '').replace('</font>', ''), \
+                                  self.fieldnames[6]: self.velocityValue.text().replace('<font color=\'yellow\'>', '').replace('</font>', ''), \
+                                  self.fieldnames[7]: self.pressureDiffValue.text().replace('<font color=\'yellow\'>', '').replace('</font>', ''), \
+                                  self.fieldnames[8]: self.stream1.text().replace('<font color=\'yellow\'>', '').replace('</font>', ''), \
+                                  self.fieldnames[9]: self.stream2.text().replace('<font color=\'yellow\'>', '').replace('</font>', ''), \
+                                  self.fieldnames[10]: self.streamKg.text().replace('<font color=\'yellow\'>', '').replace('</font>', '') \
                                   })
             self.logCount += 1
             self.statusBar().showMessage('Wpisano rekordów do pliku z danymi: '+str(self.logCount))
