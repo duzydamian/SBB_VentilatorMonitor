@@ -445,15 +445,20 @@ class MainWindow(QMainWindow):
             time = datetime.datetime.now().strftime("%H:%M:%S\t\t")
             self.dateTime.setText("Aktualna data i godzina:\t\t" + time + date)
             
-            temperature,pressure,humidity = bme280.readBME280All()
-            #self.statusBar().showMessage('Odczytano czujnik BME280')
-            #print "Temperature : ", temperature, "C",
-            #print "Pressure : ", pressure, "hPa",
-            #print "Humidity : ", humidity, "%"
-            self.temperatureValue.setText("{0:.2f}".format(temperature))
-            self.pressureValue.setText("{0:.2f}".format(pressure))
-            self.humidityValue.setText("{0:.2f}".format(humidity))
-            
+            try:
+                temperature,pressure,humidity = bme280.readBME280All()
+                #self.statusBar().showMessage('Odczytano czujnik BME280')
+                #print "Temperature : ", temperature, "C",
+                #print "Pressure : ", pressure, "hPa",
+                #print "Humidity : ", humidity, "%"
+                self.temperatureValue.setText("{0:.2f}".format(temperature))
+                self.pressureValue.setText("{0:.2f}".format(pressure))
+                self.humidityValue.setText("{0:.2f}".format(humidity))
+            except IOError:
+                self.setColorText(self.temperatureValue, "{0:.2f}".format(0), Qt.red)
+                self.setColorText(self.pressureValue, "{0:.2f}".format(0), Qt.red)
+                self.setColorText(self.humidityValue, "{0:.2f}".format(0), Qt.red)
+                
             if self.velocitySensor <> None:
                 self.temperatureCanalValue.setText("{0:.2f}".format(self.velocitySensor.temperature))
                 self.velocityValue.setText("{0:.2f}".format(self.velocitySensor.velocity))
@@ -539,10 +544,11 @@ class MainWindow(QMainWindow):
             if self.velocitySensor == None or self.diffSensor == None:
                 self.statusBar().showMessage('Wyszukiwanie urządzeń Bluetooth')
                 devs = self.adapters[0].scan(timeout=3, run_as_root=True)
+                print devs
                 for dev in devs:                    
                     #print "\tUrzadzenie ", dev["name"], " o adresie: ", dev["address"]
                     
-                    if dev["name"].find('T405i')<>-1:                        
+                    if dev["name"].find('T405i')<>-1 or dev["name"].find('T410i')<>-1:                        
                         self.statusBar().showMessage('Łączenie z czujnikiem ' + str(dev["name"]))
                         newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[1])
                         self.velocitySensor = newDevice
@@ -609,9 +615,9 @@ class VentilatorMonitor:
             logging.getLogger('pygatt').setLevel(logging.WARN)
             
             for i in range(0, 3):
-                adapters.append(pygatt.GATTToolBackend())
+                adapters.append(pygatt.GATTToolBackend('hci1'))
             
-            #print "Created adapters count: ", len(adapters), adapters[0]._hci_device
+            print "Created adapters count: ", len(adapters), adapters[0]._hci_device
             
             for adapter in adapters:
                 adapter.start()
