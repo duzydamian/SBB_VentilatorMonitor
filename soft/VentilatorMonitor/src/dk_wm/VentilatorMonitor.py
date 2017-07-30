@@ -537,15 +537,15 @@ class MainWindow(QMainWindow):
             
             self.writer.writerow({self.fieldnames[0]: date, \
                                   self.fieldnames[1]: time, \
-                                  self.fieldnames[2]: self.temperatureValue.text(), \
-                                  self.fieldnames[3]: self.humidityValue.text(), \
-                                  self.fieldnames[4]: self.pressureValue.text(), \
-                                  self.fieldnames[5]: self.temperatureCanalValue.text().replace('<font color=\'yellow\'>', '').replace('</font>', ''), \
-                                  self.fieldnames[6]: self.velocityValue.text().replace('<font color=\'yellow\'>', '').replace('</font>', ''), \
-                                  self.fieldnames[7]: self.pressureDiffValue.text().replace('<font color=\'yellow\'>', '').replace('</font>', ''), \
-                                  self.fieldnames[8]: self.stream1.text().replace('<font color=\'yellow\'>', '').replace('</font>', ''), \
-                                  self.fieldnames[9]: self.stream2.text().replace('<font color=\'yellow\'>', '').replace('</font>', ''), \
-                                  self.fieldnames[10]: self.streamKg.text().replace('<font color=\'yellow\'>', '').replace('</font>', '') \
+                                  self.fieldnames[2]: self.getCleanText(self.temperatureValue.text()), \
+                                  self.fieldnames[3]: self.getCleanText(self.humidityValue.text()), \
+                                  self.fieldnames[4]: self.getCleanText(self.pressureValue.text()), \
+                                  self.fieldnames[5]: self.getCleanText(self.temperatureCanalValue.text()), \
+                                  self.fieldnames[6]: self.getCleanText(self.velocityValue.text()), \
+                                  self.fieldnames[7]: self.getCleanText(self.pressureDiffValue.text()), \
+                                  self.fieldnames[8]: self.getCleanText(self.stream1.text()), \
+                                  self.fieldnames[9]: self.getCleanText(self.stream2.text()), \
+                                  self.fieldnames[10]: self.getCleanText(self.streamKg.text()) \
                                   })
             self.logCount += 1
             self.statusBar().showMessage('Wpisano rekordów do pliku z danymi: '+str(self.logCount))
