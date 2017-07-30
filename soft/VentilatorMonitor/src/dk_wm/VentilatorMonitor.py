@@ -26,6 +26,7 @@ import logging
 import time
 import pkg_resources
 from TestoDevice import TestoDevice
+from pprint import pprint
 
 class AboutDialog(QMessageBox):
     def __init__(self, version):
@@ -91,7 +92,9 @@ class MainWindow(QMainWindow):
         self.version = pkg_resources.get_distribution("dk_wm").version
         self.initUI()
         self.velocitySensor = None
+        self.velocitySensorReady = False
         self.diffSensor = None
+        self.diffSensorReady = False
         
     
         #function check if dir exists
@@ -366,7 +369,7 @@ class MainWindow(QMainWindow):
         #print "Main timer", self.timer.timerId()
         
         self.timerGATTConnect = QBasicTimer()
-        self.timerGATTConnect.start(10000, self)
+        self.timerGATTConnect.start(20000, self)
         
         self.timerLogging = QBasicTimer()        
         
@@ -433,10 +436,14 @@ class MainWindow(QMainWindow):
             if self.velocitySensor <> None:
                if not self.velocitySensor.isConnected():
                    #print "Usuwanie czujnika predkosci"
+                   self.statusBar().showMessage('Utracono połaczenie z czujnikiem ' + str(self.velocitySensor.name))
+                   self.velocitySensor.disconnect()
                    self.velocitySensor = None
             if self.diffSensor <> None:
                 if not self.diffSensor.isConnected():
                     #print "usuwanie czujnika roznicy cisnien"
+                    self.statusBar().showMessage('Utracono połaczenie z czujnikiem ' + str(self.diffSensor.name))
+                    self.diffSensor.disconnect()
                     self.diffSensor = None
                     
             stream1Value = None
@@ -461,8 +468,11 @@ class MainWindow(QMainWindow):
                 
             if self.velocitySensor <> None:
                 self.temperatureCanalValue.setText("{0:.2f}".format(self.velocitySensor.temperature))
+                self.temperatureCanalValue.setToolTip(self.velocitySensor.temperatureDT.strftime("%H:%M:%S\t\t"))
                 self.velocityValue.setText("{0:.2f}".format(self.velocitySensor.velocity))
+                self.velocityValue.setToolTip(self.velocitySensor.velocityDT.strftime("%H:%M:%S\t\t"))
                 self.batteryDev1.setText("{0:.2f}".format(self.velocitySensor.battery))
+                self.batteryDev1.setToolTip(self.velocitySensor.batteryDT.strftime("%H:%M:%S\t\t"))
             else:
                 self.temperatureCanalValue.setText("{0:.2f}".format(0))
                 self.velocityValue.setText("{0:.2f}".format(0))
@@ -544,21 +554,34 @@ class MainWindow(QMainWindow):
             if self.velocitySensor == None or self.diffSensor == None:
                 self.statusBar().showMessage('Wyszukiwanie urządzeń Bluetooth')
                 devs = self.adapters[0].scan(timeout=3, run_as_root=True)
-                print devs
+                #print devs
+                self.statusBar().showMessage('Znaleziono urządzeń: ' + str(len(devs)))
                 for dev in devs:                    
                     #print "\tUrzadzenie ", dev["name"], " o adresie: ", dev["address"]
                     
                     if dev["name"].find('T405i')<>-1 or dev["name"].find('T410i')<>-1:                        
                         self.statusBar().showMessage('Łączenie z czujnikiem ' + str(dev["name"]))
-                        newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[1])
-                        self.velocitySensor = newDevice
-                        self.statusBar().showMessage('Połączono z czujnikiem ' + str(dev["name"]))
+                        try:
+                            newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[1], self.statusBar())
+                            self.velocitySensor = newDevice
+                            self.statusBar().showMessage('Połączono z czujnikiem ' + str(dev["name"]))
+                        except:
+                            self.statusBar().showMessage('BŁĄD łączenia z czujnikiem ' + str(dev["name"]))
                     elif dev["name"].find('T510i')<>-1:
                         self.statusBar().showMessage('Łączenie z czujnikiem ' + str(dev["name"]))
-                        newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[2])
-                        self.diffSensor = newDevice                        
-                        self.statusBar().showMessage('Połączono z czujnikiem ' + str(dev["name"]))
+                        try:
+                            newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[2], self.statusBar())
+                            self.diffSensor = newDevice                        
+                            self.statusBar().showMessage('Połączono z czujnikiem ' + str(dev["name"]))
+                        except:
+                            self.statusBar().showMessage('BŁĄD łączenia z czujnikiem ' + str(dev["name"]))
     
+    def getCleanText(self, text):        
+        if text.find('<') != -1:
+            return 'brak danych'
+        else:
+            return text        
+        
     def restart(self):
         ack = AckDialog("Czy napewno chcesz uruchomić ponownie urzązdenie?", "Spowoduje to zakończenie aktualnej sesji logowania")
         
@@ -615,9 +638,9 @@ class VentilatorMonitor:
             logging.getLogger('pygatt').setLevel(logging.WARN)
             
             for i in range(0, 3):
-                adapters.append(pygatt.GATTToolBackend('hci1'))
+                adapters.append(pygatt.GATTToolBackend())
             
-            print "Created adapters count: ", len(adapters), adapters[0]._hci_device
+            #print "Created adapters count: ", len(adapters), adapters[0]._hci_device
             
             for adapter in adapters:
                 adapter.start()
