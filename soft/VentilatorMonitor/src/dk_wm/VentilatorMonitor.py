@@ -366,7 +366,7 @@ class MainWindow(QMainWindow):
         #print "Main timer", self.timer.timerId()
         
         self.timerGATTConnect = QBasicTimer()
-        self.timerGATTConnect.start(20000, self)
+        self.timerGATTConnect.start(10000, self)
         
         self.timerLogging = QBasicTimer()        
         
