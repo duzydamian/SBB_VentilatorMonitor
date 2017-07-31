@@ -26,7 +26,6 @@ import logging
 import time
 import pkg_resources
 from TestoDevice import TestoDevice
-from pprint import pprint
 
 class AboutDialog(QMessageBox):
     def __init__(self, version):
@@ -92,9 +91,7 @@ class MainWindow(QMainWindow):
         self.version = pkg_resources.get_distribution("dk_wm").version
         self.initUI()
         self.velocitySensor = None
-        self.velocitySensorReady = False
         self.diffSensor = None
-        self.diffSensorReady = False
         
     
         #function check if dir exists
