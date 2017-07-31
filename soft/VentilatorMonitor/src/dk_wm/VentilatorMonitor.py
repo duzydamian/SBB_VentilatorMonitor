@@ -480,7 +480,9 @@ class MainWindow(QMainWindow):
             
             if self.diffSensor <> None:
                 self.pressureDiffValue.setText("{0:.2f}".format(self.diffSensor.differentialPressure))                
-                self.batteryDev2.setText("{0:.2f}".format(self.diffSensor.battery))                
+                self.pressureDiffValue.setToolTip(self.diffSensor.differentialPressureDT.strftime("%H:%M:%S\t\t"))
+                self.batteryDev2.setText("{0:.2f}".format(self.diffSensor.battery))
+                self.batteryDev2.setToolTip(self.diffSensor.batteryDT.strftime("%H:%M:%S\t\t"))                
             else:
                 self.setColorText(self.pressureDiffValue, "{0:.2f}".format(0), Qt.yellow)
                 self.setColorText(self.batteryDev2, "{0:.2f}".format(0), Qt.yellow)
