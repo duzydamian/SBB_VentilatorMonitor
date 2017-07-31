@@ -26,6 +26,7 @@ import logging
 import time
 import pkg_resources
 from TestoDevice import TestoDevice
+from pprint import pprint
 
 class AboutDialog(QMessageBox):
     def __init__(self, version):
@@ -91,7 +92,9 @@ class MainWindow(QMainWindow):
         self.version = pkg_resources.get_distribution("dk_wm").version
         self.initUI()
         self.velocitySensor = None
+        self.velocitySensorReady = False
         self.diffSensor = None
+        self.diffSensorReady = False
         
     
         #function check if dir exists
@@ -366,7 +369,7 @@ class MainWindow(QMainWindow):
         #print "Main timer", self.timer.timerId()
         
         self.timerGATTConnect = QBasicTimer()
-        self.timerGATTConnect.start(10000, self)
+        self.timerGATTConnect.start(20000, self)
         
         self.timerLogging = QBasicTimer()        
         
@@ -433,10 +436,14 @@ class MainWindow(QMainWindow):
             if self.velocitySensor <> None:
                if not self.velocitySensor.isConnected():
                    #print "Usuwanie czujnika predkosci"
+                   self.statusBar().showMessage('Utracono połaczenie z czujnikiem ' + str(self.velocitySensor.name))
+                   self.velocitySensor.disconnect()
                    self.velocitySensor = None
             if self.diffSensor <> None:
                 if not self.diffSensor.isConnected():
                     #print "usuwanie czujnika roznicy cisnien"
+                    self.statusBar().showMessage('Utracono połaczenie z czujnikiem ' + str(self.diffSensor.name))
+                    self.diffSensor.disconnect()
                     self.diffSensor = None
                     
             stream1Value = None
@@ -445,19 +452,27 @@ class MainWindow(QMainWindow):
             time = datetime.datetime.now().strftime("%H:%M:%S\t\t")
             self.dateTime.setText("Aktualna data i godzina:\t\t" + time + date)
             
-            temperature,pressure,humidity = bme280.readBME280All()
-            #self.statusBar().showMessage('Odczytano czujnik BME280')
-            #print "Temperature : ", temperature, "C",
-            #print "Pressure : ", pressure, "hPa",
-            #print "Humidity : ", humidity, "%"
-            self.temperatureValue.setText("{0:.2f}".format(temperature))
-            self.pressureValue.setText("{0:.2f}".format(pressure))
-            self.humidityValue.setText("{0:.2f}".format(humidity))
-            
+            try:
+                temperature,pressure,humidity = bme280.readBME280All()
+                #self.statusBar().showMessage('Odczytano czujnik BME280')
+                #print "Temperature : ", temperature, "C",
+                #print "Pressure : ", pressure, "hPa",
+                #print "Humidity : ", humidity, "%"
+                self.temperatureValue.setText("{0:.2f}".format(temperature))
+                self.pressureValue.setText("{0:.2f}".format(pressure))
+                self.humidityValue.setText("{0:.2f}".format(humidity))
+            except IOError:
+                self.setColorText(self.temperatureValue, "{0:.2f}".format(0), Qt.red)
+                self.setColorText(self.pressureValue, "{0:.2f}".format(0), Qt.red)
+                self.setColorText(self.humidityValue, "{0:.2f}".format(0), Qt.red)
+                
             if self.velocitySensor <> None:
                 self.temperatureCanalValue.setText("{0:.2f}".format(self.velocitySensor.temperature))
+                self.temperatureCanalValue.setToolTip(self.velocitySensor.temperatureDT.strftime("%H:%M:%S\t\t"))
                 self.velocityValue.setText("{0:.2f}".format(self.velocitySensor.velocity))
+                self.velocityValue.setToolTip(self.velocitySensor.velocityDT.strftime("%H:%M:%S\t\t"))
                 self.batteryDev1.setText("{0:.2f}".format(self.velocitySensor.battery))
+                self.batteryDev1.setToolTip(self.velocitySensor.batteryDT.strftime("%H:%M:%S\t\t"))
             else:
                 self.temperatureCanalValue.setText("{0:.2f}".format(0))
                 self.velocityValue.setText("{0:.2f}".format(0))
@@ -522,15 +537,15 @@ class MainWindow(QMainWindow):
             
             self.writer.writerow({self.fieldnames[0]: date, \
                                   self.fieldnames[1]: time, \
-                                  self.fieldnames[2]: self.temperatureValue.text(), \
-                                  self.fieldnames[3]: self.humidityValue.text(), \
-                                  self.fieldnames[4]: self.pressureValue.text(), \
-                                  self.fieldnames[5]: self.temperatureCanalValue.text().replace('<font color=\'yellow\'>', '').replace('</font>', ''), \
-                                  self.fieldnames[6]: self.velocityValue.text().replace('<font color=\'yellow\'>', '').replace('</font>', ''), \
-                                  self.fieldnames[7]: self.pressureDiffValue.text().replace('<font color=\'yellow\'>', '').replace('</font>', ''), \
-                                  self.fieldnames[8]: self.stream1.text().replace('<font color=\'yellow\'>', '').replace('</font>', ''), \
-                                  self.fieldnames[9]: self.stream2.text().replace('<font color=\'yellow\'>', '').replace('</font>', ''), \
-                                  self.fieldnames[10]: self.streamKg.text().replace('<font color=\'yellow\'>', '').replace('</font>', '') \
+                                  self.fieldnames[2]: self.getCleanText(self.temperatureValue.text()), \
+                                  self.fieldnames[3]: self.getCleanText(self.humidityValue.text()), \
+                                  self.fieldnames[4]: self.getCleanText(self.pressureValue.text()), \
+                                  self.fieldnames[5]: self.getCleanText(self.temperatureCanalValue.text()), \
+                                  self.fieldnames[6]: self.getCleanText(self.velocityValue.text()), \
+                                  self.fieldnames[7]: self.getCleanText(self.pressureDiffValue.text()), \
+                                  self.fieldnames[8]: self.getCleanText(self.stream1.text()), \
+                                  self.fieldnames[9]: self.getCleanText(self.stream2.text()), \
+                                  self.fieldnames[10]: self.getCleanText(self.streamKg.text()) \
                                   })
             self.logCount += 1
             self.statusBar().showMessage('Wpisano rekordów do pliku z danymi: '+str(self.logCount))
@@ -539,20 +554,34 @@ class MainWindow(QMainWindow):
             if self.velocitySensor == None or self.diffSensor == None:
                 self.statusBar().showMessage('Wyszukiwanie urządzeń Bluetooth')
                 devs = self.adapters[0].scan(timeout=3, run_as_root=True)
+                #print devs
+                self.statusBar().showMessage('Znaleziono urządzeń: ' + str(len(devs)))
                 for dev in devs:                    
                     #print "\tUrzadzenie ", dev["name"], " o adresie: ", dev["address"]
                     
-                    if dev["name"].find('T405i')<>-1:                        
+                    if dev["name"].find('T405i')<>-1 or dev["name"].find('T410i')<>-1:                        
                         self.statusBar().showMessage('Łączenie z czujnikiem ' + str(dev["name"]))
-                        newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[1])
-                        self.velocitySensor = newDevice
-                        self.statusBar().showMessage('Połączono z czujnikiem ' + str(dev["name"]))
+                        try:
+                            newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[1], self.statusBar())
+                            self.velocitySensor = newDevice
+                            self.statusBar().showMessage('Połączono z czujnikiem ' + str(dev["name"]))
+                        except:
+                            self.statusBar().showMessage('BŁĄD łączenia z czujnikiem ' + str(dev["name"]))
                     elif dev["name"].find('T510i')<>-1:
                         self.statusBar().showMessage('Łączenie z czujnikiem ' + str(dev["name"]))
-                        newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[2])
-                        self.diffSensor = newDevice                        
-                        self.statusBar().showMessage('Połączono z czujnikiem ' + str(dev["name"]))
+                        try:
+                            newDevice = TestoDevice(dev["name"], dev["address"], self.adapters[2], self.statusBar())
+                            self.diffSensor = newDevice                        
+                            self.statusBar().showMessage('Połączono z czujnikiem ' + str(dev["name"]))
+                        except:
+                            self.statusBar().showMessage('BŁĄD łączenia z czujnikiem ' + str(dev["name"]))
     
+    def getCleanText(self, text):        
+        if text.find('<') != -1:
+            return 'brak danych'
+        else:
+            return text        
+        
     def restart(self):
         ack = AckDialog("Czy napewno chcesz uruchomić ponownie urzązdenie?", "Spowoduje to zakończenie aktualnej sesji logowania")
         
