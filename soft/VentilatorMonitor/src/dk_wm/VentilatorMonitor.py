@@ -117,15 +117,15 @@ class MainWindow(QMainWindow):
         self.setWindowState(Qt.WindowMaximized)
         self.statusBar()
         
-        font = QFont('Roboto', 14)                
-        fontU = QFont('Roboto', 14)
+        font = QFont('Roboto', 10)                
+        fontU = QFont('Roboto', 10)
         fontU.setUnderline(True)
-        fontB = QFont('Roboto', 14)
+        fontB = QFont('Roboto', 10)
         fontB.setBold(True)        
-        fontUB = QFont('Roboto', 14)
+        fontUB = QFont('Roboto', 10)
         fontUB.setBold(True)
         fontUB.setUnderline(True)
-        fontUB18 = QFont('Roboto', 18)
+        fontUB18 = QFont('Roboto', 12)
         fontUB18.setBold(True)
         fontUB18.setUnderline(True)
         
@@ -138,6 +138,7 @@ class MainWindow(QMainWindow):
         self.headerIcon2.setPixmap(QPixmap("/opt/dk/wm/images/icon1_small.png"))
         self.header = QWidget()
         headerLayout = QGridLayout()
+        headerLayout.setContentsMargins(1, 1, 1, 1)
         headerLayout.addWidget(self.headerIcon1, 0, 0)
         headerLayout.addWidget(self.headerText, 0, 1)
         headerLayout.addWidget(self.headerIcon2, 0, 2)
@@ -152,9 +153,10 @@ class MainWindow(QMainWindow):
         topleft.setFont(font)
         
         layoutL = QGridLayout()        
+        layoutL.setContentsMargins(1, 1, 1, 1)
         #layoutL.setColumnStretch(2, 1)
-        layoutL.setColumnMinimumWidth(0, 150)
-        layoutL.setColumnMinimumWidth(1, 150)
+        layoutL.setColumnMinimumWidth(0, 100)
+        layoutL.setColumnMinimumWidth(1, 100)
         #layoutL.setColumnMinimumWidth(2, 150)
         
         self.temperatureValue = QLabel("0.0")        
@@ -177,9 +179,10 @@ class MainWindow(QMainWindow):
         #stopright.setStyleSheet("QWidget {border:2px solid rgb(0, 0, 0); }")
         topright.setFont(font)
         layoutR = QGridLayout()
+        layoutR.setContentsMargins(1, 1, 1, 1)
         #layoutR.setColumnStretch(2, 1)
-        layoutR.setColumnMinimumWidth(0, 150)
-        layoutR.setColumnMinimumWidth(1, 150)
+        layoutR.setColumnMinimumWidth(0, 100)
+        layoutR.setColumnMinimumWidth(1, 100)
         #layoutR.setColumnMinimumWidth(2, 150)
         
         self.temperatureCanalValue = QLabel("0.0")
@@ -234,7 +237,8 @@ class MainWindow(QMainWindow):
         topS = QWidget()        
         topS.setFont(font)
         
-        layoutS = QGridLayout()        
+        layoutS = QGridLayout()
+        layoutS.setContentsMargins(1, 1, 1, 1)
         layoutS.setColumnStretch(2, 1)
         layoutS.setColumnMinimumWidth(0, 150)
         layoutS.setColumnMinimumWidth(1, 150)
@@ -245,10 +249,10 @@ class MainWindow(QMainWindow):
         
         layoutS.addWidget(QLabel("Strumień objętościowy"), 0, 0)
         layoutS.addWidget(self.stream1, 0, 1, Qt.AlignCenter)
-        layoutS.addWidget(QLabel("Nm3/s"), 0, 2)
+        layoutS.addWidget(QLabel("Nm3/h"), 0, 2)
         layoutS.addWidget(QLabel("Strumień objętościowy"), 1, 0)
         layoutS.addWidget(self.stream2, 1, 1, Qt.AlignCenter)
-        layoutS.addWidget(QLabel("m3/s"), 1, 2)
+        layoutS.addWidget(QLabel("m3/h"), 1, 2)
         layoutS.addWidget(QLabel("Strumień masowy"), 2, 0)
         layoutS.addWidget(self.streamKg, 2, 1, Qt.AlignCenter)
         layoutS.addWidget(QLabel("kg/s"), 2, 2)
@@ -257,13 +261,14 @@ class MainWindow(QMainWindow):
         
         self.staticPltStream = pg.GraphicsWindow(title="Wykres")
         #self.staticPltStream.setInteractive(True)
-        self.p1Stream = self.staticPltStream.addPlot(title="Strumień [m3/s]")
+        self.p1Stream = self.staticPltStream.addPlot(title="Strumień [m3/h]")
         self.curveStream = self.p1Stream.plot(pen=(255,255,0), name="Yellow X curve")
-        self.p1Stream.setYRange(-100.0, 100.0)
+        self.p1Stream.setYRange(-30000.0, 30000.0)
         self.dataStream = [0]*100
         
         mainL = QWidget()
         layoutMainL = QGridLayout()
+        layoutMainL.setContentsMargins(1, 1, 1, 1)
         layoutMainL.addWidget(label1)
         layoutMainL.addWidget(topleft)
         layoutMainL.addWidget(label2)
@@ -272,6 +277,7 @@ class MainWindow(QMainWindow):
         
         mainR = QWidget()
         layoutMainR = QGridLayout()
+        layoutMainR.setContentsMargins(1, 1, 1, 1)
         layoutMainR.addWidget(label3)
         layoutMainR.addWidget(topS)
         layoutMainR.addWidget(self.staticPltStream)        
@@ -279,12 +285,14 @@ class MainWindow(QMainWindow):
         
         mainLR = QWidget()
         layoutMainLR = QGridLayout()
+        layoutMainLR.setContentsMargins(1, 1, 1, 1)
         layoutMainLR.addWidget(mainL, 0, 0)
         layoutMainLR.addWidget(mainR, 0, 1)
         mainLR.setLayout(layoutMainLR)
         
         main = QWidget()
         layout = QGridLayout()
+        layout.setContentsMargins(1, 1, 1, 1)
         layout.addWidget(self.header)
         layout.addWidget(self.dateTime)
         layout.addWidget(mainLR)        
@@ -341,11 +349,10 @@ class MainWindow(QMainWindow):
         #helpMenu.addAction(helpAction)
         
         toolbar = QToolBar()
-        toolbar.setIconSize(QSize(64,64))
+        toolbar.setIconSize(QSize(50,50))
         toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon|Qt.AlignLeading) #<= Toolbuttonstyle
         self.addToolBar(Qt.LeftToolBarArea, toolbar)
         toolbar.addActions((startAction, stopAction))
-        toolbar.addSeparator()
         toolbar.addSeparator()
         toolbar.addSeparator()
         toolbar.addSeparator()
@@ -353,9 +360,7 @@ class MainWindow(QMainWindow):
         toolbar.addSeparator()
         toolbar.addSeparator()
         toolbar.addSeparator()
-        toolbar.addSeparator()
         toolbar.addActions((restartAction, shutdownAction))
-        toolbar.addSeparator()
         toolbar.addSeparator()
         toolbar.addSeparator()
         toolbar.addSeparator()
@@ -370,7 +375,7 @@ class MainWindow(QMainWindow):
         
         self.timerLogging = QBasicTimer()        
         
-        self.setGeometry(300, 300, 300, 300)        
+        #self.setGeometry(300, 300, 300, 300)        
         self.setWindowTitle('System monitorowania wentylatora')
         self.setWindowIcon(QIcon('/opt/dk/wm/images/icon1.png'))    
         
@@ -446,8 +451,8 @@ class MainWindow(QMainWindow):
             stream1Value = None
             stream2Value = None
             date = datetime.datetime.now().strftime("%d-%m-%Y")
-            time = datetime.datetime.now().strftime("%H:%M:%S\t\t")
-            self.dateTime.setText("Aktualna data i godzina:\t\t" + time + date)
+            time = datetime.datetime.now().strftime("%H:%M:%S\t")
+            self.dateTime.setText("Aktualna data i godzina:\t" + time + date)
             
             try:
                 temperature,pressure,humidity = bme280.readBME280All()
@@ -494,8 +499,8 @@ class MainWindow(QMainWindow):
                 A = 0.06745867
                 roCanal = (101325.0+self.diffSensor.differentialPressure)*28.84/8314.0/(273.0+self.velocitySensor.temperature)
                 m = self.velocitySensor.velocity*A*roCanal
-                stream1Value = m/ro
-                stream2Value = m/roCanal
+                stream1Value = m/ro*3600
+                stream2Value = m/roCanal*3600
                 #print ro, A, roCanal, m, stream1Value, stream2Value
                 self.stream1.setText("{0:.2f}".format(stream1Value))
                 self.stream2.setText("{0:.2f}".format(stream2Value))
